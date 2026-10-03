@@ -1,0 +1,31 @@
+# Secrets and environment configuration
+.env
+.env.*
+!.env.example
+config.php
+config.local.php
+*.pem
+*.key
+# Private runtime data (including resumes, API keys and sessions)
+lettercraft-private/
+private-data/
+sessions/
+uploads/
+exports/
+# Dependencies, caches, development output
+node_modules/
+.vite/
+coverage/
+*.log
+*.tsbuildinfo
+# Local backups and packages
+*.zip
+*.tar.gz
+*.bak
+*.backup
+*~
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+# Keep compiled htdocs assets: ready for shared-host deployment.
