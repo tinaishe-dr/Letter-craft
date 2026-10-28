@@ -95,10 +95,10 @@ if(in_array($action,['generate','test','tailor'],true)&&$method==='POST'){
   if(!$profile)fail('Choose a supported country or custom region.');
   $kind=field($b,'documentType',30);if(!in_array($kind,['Resume','CV','Academic CV'],true))fail('Choose a document type.');
   $pages=field($b,'pages',2);if(!in_array($pages,['1','2','3','4'],true))fail('Choose a page target.');
-  $sourceLines=source_lines($resume['content']);
+  try{$sourceDocument=parse_resume($resume['content']);}catch(RuntimeException $e){fail($e->getMessage(),400);}
   $payload=['model'=>$s['model'],'store'=>false,'max_output_tokens'=>6500,
     'instructions'=>tailoring_instructions(),
-    'input'=>json_encode(['sourceLines'=>$sourceLines,'purpose'=>$purpose,'jobDescription'=>$description,
+    'input'=>json_encode(['structuredResume'=>$sourceDocument,'purpose'=>$purpose,'jobDescription'=>$description,
       'role'=>$purpose==='targeted'?field($b,'role',600):'',
       'company'=>$purpose==='targeted'?field($b,'company',600):'',
       'documentType'=>$kind,'country'=>$profile['label'],'regionalGuidance'=>$profile['guidance'],
@@ -116,7 +116,7 @@ if(in_array($action,['generate','test','tailor'],true)&&$method==='POST'){
  if($code<200||$code>=300){$msg=match($code){401=>'OpenAI rejected the API key. Replace it in Settings.',403=>'This API project cannot access the selected model.',404=>'Model not found. Check the model ID in Settings.',429=>'OpenAI usage or rate limit reached. Check API billing and limits.',default=>'OpenAI could not complete the request. Try again later.'};fail($msg,502);}
  $data=json_decode($response,true);$letter='';foreach($data['output']??[] as $o)foreach($o['content']??[] as $c)if(($c['type']??'')==='output_text')$letter.=($c['text']??'')."\n";
  if(($data['status']??'')==='incomplete'||trim($letter)==='')fail('OpenAI did not return complete text. Try another model or retry.',502);
- if($action==='tailor'){try{reply(assemble_tailoring(trim($letter),$sourceLines,$description));}catch(RuntimeException $e){fail($e->getMessage(),502);}}
+ if($action==='tailor'){try{reply(assemble_tailoring(trim($letter),$sourceDocument,$description));}catch(RuntimeException $e){fail($e->getMessage(),502);}}
  reply($action==='test'?['ok'=>true,'message'=>'Connection tested successfully.']:($action==='tailor'?['resumeText'=>trim($letter)]:['letter'=>trim($letter)]));
 }
 fail('Unknown action or method.',404);
